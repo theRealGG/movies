@@ -1,4 +1,5 @@
-use tracing::Subscriber;
+use axum::http::Request;
+use tracing::{Span, Subscriber};
 use tracing_subscriber::{fmt::MakeWriter, layer::SubscriberExt};
 
 pub fn subscriber<Sink>(name: String, sink: Sink) -> impl Subscriber + Sync + Send
@@ -28,4 +29,8 @@ pub fn init_subscriber(subscriber: impl Subscriber + Sync + Send) {
     tracing_log::LogTracer::init().expect("Unable to bridge logging and tracing");
     tracing::subscriber::set_global_default(subscriber).expect("Unable to set global subscriber");
     tracing::info!("Successfully initialized logging facade for application");
+}
+
+pub fn make_span_with<T>(_: &Request<T>) -> Span {
+    tracing::info_span!("HTTP-REQUEST", correlation_id = %uuid::Uuid::new_v4())
 }

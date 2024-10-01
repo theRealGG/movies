@@ -2,9 +2,10 @@ use std::io::Result;
 
 use axum::Router;
 use tokio::net::TcpListener;
+use tower_http::trace::TraceLayer;
 use typed_builder::TypedBuilder;
 
-use crate::models::environment::Environment;
+use crate::{models::environment::Environment, telematry::make_span_with};
 
 #[derive(Debug, TypedBuilder)]
 pub struct Server {
@@ -15,7 +16,10 @@ pub struct Server {
 
 impl Server {
     fn router(&self) -> Router {
-        Router::new()
+        use tower::ServiceBuilder;
+        Router::new().layer(
+            ServiceBuilder::new().layer(TraceLayer::new_for_http().make_span_with(make_span_with)),
+        )
     }
 
     async fn without_reload(&self) -> Result<TcpListener> {
