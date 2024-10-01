@@ -1,3 +1,9 @@
 server:
-  host: 127.0.0.1
+  reload: true
+  hostname: 127.0.0.1
   port: 8080
+database:
+  hostname: 127.0.0.1
+  password: password
+  username: username
+  port: 5432
