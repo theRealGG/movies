@@ -1,4 +1,5 @@
 use movies::{
+    app::Application,
     config::config,
     telematry::{init_subscriber, subscriber},
 };
@@ -20,6 +21,10 @@ async fn main() -> Result<(), anyhow::Error> {
     });
 
     tracing::info!("Successfully loaded config");
+
+    let app = Application::try_new(settings)?;
+
+    app.run().await.expect("Could not run application");
 
     Ok(())
 }
