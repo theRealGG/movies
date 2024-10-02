@@ -2,20 +2,20 @@ use secrecy::{ExposeSecret, SecretString};
 use serde::Deserialize;
 use sqlx::postgres::PgConnectOptions;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
     pub server: ServerSettings,
     pub database: DatabaseSettings,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct ServerSettings {
     pub hostname: String,
     pub port: u16,
     pub reload: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct DatabaseSettings {
     pub hostname: String,
     pub port: u16,

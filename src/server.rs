@@ -19,7 +19,7 @@ pub struct Server {
 }
 
 impl Server {
-    fn router(&self) -> Router {
+    pub fn router(&self) -> Router {
         use axum::routing::get;
         use tower::ServiceBuilder;
         Router::new()
