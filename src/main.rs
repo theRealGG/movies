@@ -25,6 +25,5 @@ async fn main() -> Result<(), anyhow::Error> {
     let app = Application::try_new(settings)?;
 
     app.run().await.expect("Could not run application");
-
     Ok(())
 }

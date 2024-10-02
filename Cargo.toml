@@ -21,6 +21,16 @@ typed-builder = "0.20.0"
 
 listenfd = "=0.3.5"
 
+sqlx = { version = "0.8", features = [
+  "runtime-tokio-rustls",
+  "any",
+  "postgres",
+  "derive",
+  "migrate",
+  "uuid",
+  "chrono",
+] }
+
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = [
   "env-filter",

@@ -5,21 +5,30 @@ use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 use typed_builder::TypedBuilder;
 
-use crate::{models::environment::Environment, telematry::make_span_with};
+use crate::{
+    app::state::AppState, models::environment::Environment, routes::server::health_check,
+    telematry::make_span_with,
+};
 
-#[derive(Debug, TypedBuilder)]
+#[derive(TypedBuilder)]
 pub struct Server {
     hostname: String,
     port: u16,
     reload: bool,
+    state: AppState,
 }
 
 impl Server {
     fn router(&self) -> Router {
+        use axum::routing::get;
         use tower::ServiceBuilder;
-        Router::new().layer(
-            ServiceBuilder::new().layer(TraceLayer::new_for_http().make_span_with(make_span_with)),
-        )
+        Router::new()
+            .route("/health_check", get(health_check))
+            .layer(
+                ServiceBuilder::new()
+                    .layer(TraceLayer::new_for_http().make_span_with(make_span_with)),
+            )
+            .with_state(self.state.clone())
     }
 
     async fn without_reload(&self) -> Result<TcpListener> {
