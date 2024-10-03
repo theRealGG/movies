@@ -4,7 +4,7 @@ use sqlx::{postgres::PgPoolOptions, PgPool};
 
 use crate::models::settings::DatabaseSettings;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Database {
     pool: PgPool,
 }
