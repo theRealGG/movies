@@ -2149,6 +2149,7 @@ dependencies = [
  "tower-layer",
  "tower-service",
  "tracing",
+ "uuid 1.10.0",
 ]
 
 [[package]]
