@@ -1,23 +1,19 @@
 use std::io::Result;
 
-use axum::Router;
 use tokio::net::TcpListener;
 use typed_builder::TypedBuilder;
 
-use crate::models::environment::Environment;
+use crate::{app::state::AppState, die, models::environment::Environment, router::router};
 
-#[derive(Debug, TypedBuilder)]
+#[derive(TypedBuilder, Clone)]
 pub struct Server {
     hostname: String,
     port: u16,
     reload: bool,
+    state: AppState,
 }
 
 impl Server {
-    fn router(&self) -> Router {
-        Router::new()
-    }
-
     async fn without_reload(&self) -> Result<TcpListener> {
         tracing::info!("Spawning server without reload functionality");
         TcpListener::bind(format!("{}:{}", self.hostname, self.port)).await
@@ -43,7 +39,7 @@ impl Server {
         }
     }
 
-    pub async fn serve(&self) -> Result<()> {
+    pub async fn serve(self) -> Result<()> {
         let listener = if self.reload {
             self.with_reload().await?
         } else {
@@ -54,6 +50,36 @@ impl Server {
             port = self.port,
             "Spawning server"
         );
-        axum::serve(listener, self.router()).await
+        axum::serve(listener, router(self.state))
+            .with_graceful_shutdown(shutdown())
+            .await
+    }
+}
+
+fn exit() {
+    die!("Terminating process");
+}
+
+async fn shutdown() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => exit(),
+        _ = terminate => exit(),
     }
 }

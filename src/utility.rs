@@ -1,3 +1,13 @@
+#[macro_export]
+macro_rules! die {
+    ($($arg:tt)*) => {
+        {
+            tracing::error!($($arg)*);
+            std::process::exit(1);
+        }
+    };
+}
+
 pub fn capitalize(s: &str) -> String {
     let mut c = s.chars();
     match c.next() {

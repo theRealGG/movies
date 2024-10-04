@@ -2,8 +2,10 @@ server:
   reload: true
   hostname: 127.0.0.1
   port: 8080
+# local postgres database
 database:
   hostname: 127.0.0.1
   password: password
-  username: username
+  username: movies
+  database: movies
   port: 5432

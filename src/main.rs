@@ -1,10 +1,9 @@
 use movies::{
     app::Application,
     config::config,
+    die,
     telematry::{init_subscriber, subscriber},
 };
-
-static EXIT_FAILURE: i32 = 1;
 
 fn setup_logger() {
     let subscriber = subscriber("movies".into(), std::io::stdout);
@@ -15,16 +14,13 @@ fn setup_logger() {
 async fn main() -> Result<(), anyhow::Error> {
     setup_logger();
 
-    let settings = config().unwrap_or_else(|_| {
-        tracing::error!("Unable to load config");
-        std::process::exit(EXIT_FAILURE)
-    });
+    let settings = config().unwrap_or_else(|_| die!("Unable to load config"));
 
     tracing::info!("Successfully loaded config");
 
-    let app = Application::try_new(settings)?;
+    let app =
+        Application::try_new(settings).unwrap_or_else(|_| die!("Unable to create application"));
 
     app.run().await.expect("Could not run application");
-
     Ok(())
 }

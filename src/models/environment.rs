@@ -5,7 +5,7 @@ use crate::utility::capitalize;
 
 use super::error::Error;
 
-#[derive(Debug, Eq, Copy, Clone, PartialEq, PartialOrd, Ord)]
+#[derive(Debug, Eq, Copy, Clone, PartialEq)]
 pub enum Environment {
     Local,
     Staging,
@@ -87,5 +87,44 @@ impl Environment {
 
     pub fn config_file(&self) -> String {
         format!("config/{}.yaml", self.to_str())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use claims::{assert_err, assert_ok_eq};
+
+    #[test]
+    fn should_parse_env_str() {
+        let envs = [
+            ("local", Environment::Local),
+            ("staging", Environment::Staging),
+            ("production", Environment::Production),
+        ];
+
+        for (env_str, env) in envs {
+            assert_ok_eq!(
+                Environment::from_str(env_str),
+                env,
+                "Environment string: {} => {}",
+                env_str,
+                env
+            );
+        }
+    }
+
+    #[test]
+    fn should_not_parse_env_str() {
+        let input =
+            "This is some random input which is used to test the string parse functionality"
+                .split(" ");
+        for word in input {
+            assert_err!(
+                Environment::from_str(word),
+                "The input: <{}> must not be parsed",
+                word
+            );
+        }
     }
 }
