@@ -1,20 +1,11 @@
 use std::io::Result;
 
-use axum::{http::HeaderName, Router};
 use tokio::net::TcpListener;
-use tower_http::{
-    request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer},
-    trace::TraceLayer,
-};
-use tracing_subscriber::fmt::layer;
 use typed_builder::TypedBuilder;
 
-use crate::{
-    app::state::AppState, models::environment::Environment, routes::server::health_check,
-    telematry::make_span_with,
-};
+use crate::{app::state::AppState, die, models::environment::Environment, router::router};
 
-#[derive(TypedBuilder)]
+#[derive(TypedBuilder, Clone)]
 pub struct Server {
     hostname: String,
     port: u16,
@@ -23,23 +14,6 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn router(&self) -> Router {
-        use axum::routing::get;
-        use tower::ServiceBuilder;
-
-        let request_id = HeaderName::from_static("x-request-id");
-
-        Router::new()
-            .route("/health_check", get(health_check))
-            .layer(
-                ServiceBuilder::new()
-                    .layer(SetRequestIdLayer::new(request_id.clone(), MakeRequestUuid))
-                    .layer(TraceLayer::new_for_http().make_span_with(make_span_with))
-                    .layer(PropagateRequestIdLayer::new(request_id)),
-            )
-            .with_state(self.state.clone())
-    }
-
     async fn without_reload(&self) -> Result<TcpListener> {
         tracing::info!("Spawning server without reload functionality");
         TcpListener::bind(format!("{}:{}", self.hostname, self.port)).await
@@ -65,7 +39,7 @@ impl Server {
         }
     }
 
-    pub async fn serve(&self) -> Result<()> {
+    pub async fn serve(self) -> Result<()> {
         let listener = if self.reload {
             self.with_reload().await?
         } else {
@@ -76,6 +50,36 @@ impl Server {
             port = self.port,
             "Spawning server"
         );
-        axum::serve(listener, self.router()).await
+        axum::serve(listener, router(self.state))
+            .with_graceful_shutdown(shutdown())
+            .await
+    }
+}
+
+fn exit() {
+    die!("Terminating process");
+}
+
+async fn shutdown() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => exit(),
+        _ = terminate => exit(),
     }
 }

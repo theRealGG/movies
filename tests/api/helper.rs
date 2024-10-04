@@ -4,12 +4,12 @@ use movies::{
     config::config,
     database::Database,
     models::settings::{DatabaseSettings, Settings},
-    server::Server,
+    router::router,
 };
 use sqlx::{Connection, Executor, PgConnection};
 
 pub struct TestApp {
-    server: Server,
+    router: Router,
 }
 
 impl TestApp {
@@ -30,19 +30,13 @@ impl TestApp {
             .expect("Failed to create database.");
 
         Self {
-            server: Server::builder()
-                .port(0)
-                .hostname("127.0.0.1".into())
-                .state(AppState {
-                    database: Database::new(settings.database),
-                })
-                .reload(false)
-                .build(),
+            router: router(AppState {
+                database: Database::new(settings.database),
+            }),
         }
     }
-
     fn router(self) -> Router {
-        self.server.router()
+        self.router
     }
 }
 

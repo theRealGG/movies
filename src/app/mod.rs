@@ -25,7 +25,7 @@ impl Application {
         })
     }
 
-    pub async fn run(&self) -> IOResult<()> {
+    pub async fn run(self) -> IOResult<()> {
         self.server.serve().await
     }
 }

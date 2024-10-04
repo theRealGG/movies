@@ -1,6 +1,8 @@
 use axum::http::Request;
-use tracing::{Span, Subscriber};
+use tracing::{error, info_span, Span, Subscriber};
 use tracing_subscriber::{fmt::MakeWriter, layer::SubscriberExt};
+
+use crate::globals::REQUEST_ID;
 
 pub fn subscriber<Sink>(name: String, sink: Sink) -> impl Subscriber + Sync + Send
 where
@@ -31,6 +33,22 @@ pub fn init_subscriber(subscriber: impl Subscriber + Sync + Send) {
     tracing::info!("Successfully initialized logging facade for application");
 }
 
-pub fn make_span_with<T>(_: &Request<T>) -> Span {
-    tracing::info_span!("HTTP-REQUEST", correlation_id = %uuid::Uuid::new_v4())
+pub fn make_span_with<T>(request: &Request<T>) -> Span {
+    use tracing::{error, info_span};
+    use uuid::Uuid;
+    match request.headers().get(REQUEST_ID) {
+        Some(id) => {
+            info_span!(
+                "HTTP-REQUEST",
+                correlation_id = id
+                    .to_str()
+                    .map(String::from)
+                    .unwrap_or_else(|_| Uuid::new_v4().to_string())
+            )
+        }
+        None => {
+            error!("Unable to extract request_id. Make sure the request_id is set");
+            info_span!("HTTP-REQUEST", correlation_id = %Uuid::new_v4())
+        }
+    }
 }
