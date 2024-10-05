@@ -7,20 +7,21 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  # sqlx
   SQLX_VERSION: 0.8.0
   SQLX_FEATURES: "rustls,postgres"
+  # database
   APP_USER: movies
   APP_USER_PWD: password
+  # DO NOT REMOVE: is used inside the init_db script
   APP_DB_NAME: movies
 
 jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    # Service containers to run alongside the `test` container job
     services:
       postgres:
-        # Docker Hub image
         image: postgres:14
         env:
           POSTGRES_USER: movies_admin
@@ -48,11 +49,12 @@ jobs:
 
           # Create the application user
           CREATE_QUERY="CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
-          PGPASSWORD="password" psql -U "movies" -h "localhost" -c "${CREATE_QUERY}"
+          #f user or database differ from default it needs to be explictly specified
+          PGPASSWORD="password" psql -U "movies_admin" -d "postgres" -h "localhost" -c "${CREATE_QUERY}"
 
           # Grant create db privileges to the app user
           GRANT_QUERY="ALTER USER ${APP_USER} CREATEDB;"
-          PGPASSWORD="password" psql -U "movies" -h "localhost" -c "${GRANT_QUERY}"
+          PGPASSWORD="password" psql -U "movies_admin" -d "postgres"  -h "localhost" -c "${GRANT_QUERY}"
 
       - name: Migrate database
         run: |
@@ -125,11 +127,11 @@ jobs:
 
           # Create the application user
           CREATE_QUERY="CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
-          PGPASSWORD="password" psql -U "postgres" -h "localhost" -c "${CREATE_QUERY}"
+          PGPASSWORD="password" psql -U "movies_admin" -h "localhost" -d "postgres" -c "${CREATE_QUERY}"
 
           # Grant create db privileges to the app user
           GRANT_QUERY="ALTER USER ${APP_USER} CREATEDB;"
-          PGPASSWORD="password" psql -U "movies_admin" -h "localhost" -c "${GRANT_QUERY}"
+          PGPASSWORD="password" psql -U "movies_admin" -d "postgres" -h "localhost" -c "${GRANT_QUERY}"
       - name: Migrate database
         run: SKIP_DOCKER=true ./scripts/init_db.sh
       - name: Install cargo-llvm-cov
