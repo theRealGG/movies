@@ -23,7 +23,7 @@ jobs:
         # Docker Hub image
         image: postgres:14
         env:
-          POSTGRES_USER: movies
+          POSTGRES_USER: movies_admin
           POSTGRES_PASSWORD: password
           POSTGRES_DB: movies
         ports:
@@ -98,7 +98,7 @@ jobs:
       postgres:
         image: postgres:14
         env:
-          POSTGRES_USER: movies
+          POSTGRES_USER: movies_admin
           POSTGRES_PASSWORD: password
           POSTGRES_DB: movies
         ports:
