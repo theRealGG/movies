@@ -3,7 +3,7 @@ use axum::{
     body::Body,
     http::{Method, Request, StatusCode},
 };
-use tower::{Service, ServiceExt};
+use tower::ServiceExt;
 
 #[tokio::test]
 async fn should_pass_health_check() {
