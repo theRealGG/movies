@@ -12,10 +12,10 @@ fi
 
 # Check if a custom parameter has been set, otherwise use default values
 DB_PORT="${DB_PORT:=5432}"
-SUPERUSER="${SUPERUSER:=movies}"
+SUPERUSER="${SUPERUSER:=movies_admin}"
 SUPERUSER_PWD="${SUPERUSER_PWD:=password}"
 APP_USER="${APP_USER:=app}"
-APP_USER_PWD="${APP_USER_PWD:=secret}"
+APP_USER_PWD="${APP_USER_PWD:=password}"
 APP_DB_NAME="${APP_DB_NAME:=movies}"
 
 # Allow to skip Docker if a dockerized Postgres database is already running
