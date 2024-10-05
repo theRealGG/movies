@@ -52,7 +52,7 @@ jobs:
 
           # Grant create db privileges to the app user
           GRANT_QUERY="ALTER USER ${APP_USER} CREATEDB;"
-          PGPASSWORD="password" psql -U "" -h "localhost" -c "${GRANT_QUERY}"
+          PGPASSWORD="password" psql -U "movies_admin" -h "localhost" -c "${GRANT_QUERY}"
 
       - name: Migrate database
         run: |
